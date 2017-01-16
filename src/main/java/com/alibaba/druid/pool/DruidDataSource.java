@@ -377,7 +377,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             notEmptySignalCount = 0L;
             notEmptyWaitNanos = 0;
 
-            activePeak = 0;
+            activePeak = activeCount;
             activePeakTime = 0;
             poolingPeak = 0;
             createTimespan = 0;
@@ -614,7 +614,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
             }
 
             if (getInitialSize() > maxActive) {
-                throw new IllegalArgumentException("illegal initialSize " + this.initialSize + ", maxActieve " + maxActive);
+                throw new IllegalArgumentException("illegal initialSize " + this.initialSize + ", maxActive " + maxActive);
             }
 
             if (timeBetweenLogStatsMillis > 0 && useGlobalDataSourceStat) {
@@ -1955,6 +1955,7 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
         public void run() {
             initedLatch.countDown();
 
+            long lastDiscardCount = 0;
             int errorCount = 0;
             for (;;) {
                 // addLast
@@ -1964,10 +1965,14 @@ public class DruidDataSource extends DruidAbstractDataSource implements DruidDat
                     break;
                 }
 
+                long discardCount = DruidDataSource.this.discardCount;
+                boolean discardChanged = discardCount - lastDiscardCount > 0;
+                lastDiscardCount = discardCount;
+
                 try {
                     boolean emptyWait = true;
 
-                    if (createError != null && poolingCount == 0) {
+                    if (createError != null && poolingCount == 0 && !discardChanged) {
                         emptyWait = false;
                     }
 
