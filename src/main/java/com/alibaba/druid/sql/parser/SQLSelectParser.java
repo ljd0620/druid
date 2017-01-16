@@ -17,7 +17,10 @@ package com.alibaba.druid.sql.parser;
 
 import java.util.List;
 
-import com.alibaba.druid.sql.ast.*;
+import com.alibaba.druid.sql.ast.SQLExpr;
+import com.alibaba.druid.sql.ast.SQLOrderBy;
+import com.alibaba.druid.sql.ast.SQLOrderingSpecification;
+import com.alibaba.druid.sql.ast.SQLSetQuantifier;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLExprTableSource;
 import com.alibaba.druid.sql.ast.statement.SQLJoinTableSource;
@@ -202,8 +205,6 @@ public class SQLSelectParser extends SQLParser {
         parseWhere(queryBlock);
 
         parseGroupBy(queryBlock);
-
-        parseFetchClause(queryBlock);
 
         return queryRest(queryBlock);
     }
@@ -554,12 +555,6 @@ public class SQLSelectParser extends SQLParser {
     }
 
     public void parseFetchClause(SQLSelectQueryBlock queryBlock) {
-        if (lexer.token() == Token.LIMIT) {
-            SQLLimit limit = this.exprParser.parseLimit();
-            queryBlock.setLimit(limit);
-            return;
-        }
-
         if (identifierEquals("OFFSET") || lexer.token() == Token.OFFSET) {
             lexer.nextToken();
             SQLExpr offset = this.exprParser.primary();

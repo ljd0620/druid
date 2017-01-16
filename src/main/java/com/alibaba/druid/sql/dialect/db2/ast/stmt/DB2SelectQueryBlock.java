@@ -48,7 +48,7 @@ public class DB2SelectQueryBlock extends SQLSelectQueryBlock implements DB2Objec
             acceptChild(visitor, this.from);
             acceptChild(visitor, this.where);
             acceptChild(visitor, this.groupBy);
-            acceptChild(visitor, this.getFirst());
+            acceptChild(visitor, this.first);
         }
         visitor.endVisit(this);
     }

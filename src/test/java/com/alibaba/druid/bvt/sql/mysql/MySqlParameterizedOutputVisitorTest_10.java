@@ -1,4 +1,4 @@
-package com.alibaba.druid.bvt.sql.mysql.param;
+package com.alibaba.druid.bvt.sql.mysql;
 
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;

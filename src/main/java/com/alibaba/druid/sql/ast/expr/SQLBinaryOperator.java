@@ -26,8 +26,7 @@ public enum SQLBinaryOperator {
     BitwiseXor("^", 50), 
     
     Multiply("*", 60), 
-    Divide("/", 60),
-    DIV("DIV", 60), // mysql integer division
+    Divide("/", 60), 
     Modulus("%", 60), 
     Mod("MOD", 60),
     

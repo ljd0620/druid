@@ -144,7 +144,7 @@ public class StatFilter extends FilterEventAdapter implements StatFilterMBean {
         try {
             sql = ParameterizedOutputVisitorUtils.parameterize(sql, dbType);
         } catch (Exception e) {
-            LOG.error("merge sql error, dbType " + dbType + ", sql : " + sql, e);
+            LOG.error("merge sql error, dbType " + dbType + ", sql : \n" + sql, e);
         }
 
         return sql;
@@ -462,7 +462,8 @@ public class StatFilter extends FilterEventAdapter implements StatFilterMBean {
                 sqlStat.setLastSlowParameters(slowParameters);
 
                 if (logSlowSql) {
-                    LOG.error("slow sql " + millis + " millis. " + statement.getLastExecuteSql() + "" + slowParameters);
+                    LOG.error("slow sql " + millis + " millis. \n" + statement.getLastExecuteSql() + "\n"
+                              + slowParameters);
                 }
             }
         }

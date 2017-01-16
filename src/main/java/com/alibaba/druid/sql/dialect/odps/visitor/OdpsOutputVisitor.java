@@ -526,6 +526,7 @@ public class OdpsOutputVisitor extends SQLASTOutputVisitor implements OdpsASTVis
 
         if (x.getLimit() != null) {
             println();
+            print0(ucase ? "LIMIT " : "limit ");
             x.getLimit().accept(this);
         }
 

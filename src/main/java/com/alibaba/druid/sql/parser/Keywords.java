@@ -27,8 +27,6 @@ public class Keywords {
 
     public final static Keywords     DEFAULT_KEYWORDS;
 
-    public final static Keywords     SQLITE_KEYWORDS;
-
     static {
         Map<String, Token> map = new HashMap<String, Token>();
 
@@ -154,13 +152,6 @@ public class Keywords {
         map.put("INOUT", Token.INOUT);
         
         DEFAULT_KEYWORDS = new Keywords(map);
-
-        Map<String, Token> sqlitemap = new HashMap<String, Token>();
-
-        sqlitemap.putAll(Keywords.DEFAULT_KEYWORDS.getKeywords());
-
-        sqlitemap.put("LIMIT", Token.LIMIT);
-        SQLITE_KEYWORDS = new Keywords(sqlitemap);
     }
 
     public boolean containsValue(Token token) {

@@ -18,7 +18,6 @@ package com.alibaba.druid.sql.dialect.postgresql.parser;
 import java.util.List;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.ast.SQLParameter;
 import com.alibaba.druid.sql.ast.SQLSetQuantifier;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
@@ -29,6 +28,7 @@ import com.alibaba.druid.sql.ast.statement.SQLTableSource;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGFunctionTableSource;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock.IntoOption;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock.PGLimit;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGValuesQuery;
 import com.alibaba.druid.sql.parser.ParserException;
 import com.alibaba.druid.sql.parser.SQLExprParser;
@@ -159,7 +159,7 @@ public class PGSelectParser extends SQLSelectParser {
 
         for (;;) {
             if (lexer.token() == Token.LIMIT) {
-                SQLLimit limit = new SQLLimit();
+                PGLimit limit = new PGLimit();
 
                 lexer.nextToken();
                 if (lexer.token() == Token.ALL) {
@@ -171,9 +171,9 @@ public class PGSelectParser extends SQLSelectParser {
 
                 queryBlock.setLimit(limit);
             } else if (lexer.token() == Token.OFFSET) {
-                SQLLimit limit = queryBlock.getLimit();
+                PGLimit limit = queryBlock.getLimit();
                 if (limit == null) {
-                    limit = new SQLLimit();
+                    limit = new PGLimit();
                     queryBlock.setLimit(limit);
                 }
                 lexer.nextToken();

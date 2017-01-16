@@ -31,6 +31,8 @@ public class OdpsSelectQueryBlock extends SQLSelectQueryBlock {
 
     private SQLOrderBy orderBy;
 
+    private SQLExpr limit;
+
     protected List<SQLHint> hints;
 
     protected List<SQLExpr>              distributeBy = new ArrayList<SQLExpr>();
@@ -54,6 +56,17 @@ public class OdpsSelectQueryBlock extends SQLSelectQueryBlock {
 
     public List<SQLSelectOrderByItem> getSortBy() {
         return sortBy;
+    }
+
+    public SQLExpr getLimit() {
+        return limit;
+    }
+
+    public void setLimit(SQLExpr limit) {
+        if (limit != null) {
+            limit.setParent(this);
+        }
+        this.limit = limit;
     }
 
     @Override

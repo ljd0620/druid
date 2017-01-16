@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
-import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.ast.SQLObjectImpl;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.visitor.SQLASTVisitor;
@@ -38,8 +37,8 @@ public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery
     protected boolean                   forUpdate     = false;
     protected boolean                   noWait        = false;
     protected SQLExpr                   waitTime;
-
-    protected SQLLimit                  limit;
+    protected SQLExpr                   first;
+    protected SQLExpr                   offset;
 
     public SQLSelectQueryBlock(){
 
@@ -151,45 +150,27 @@ public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery
         this.waitTime = waitTime;
     }
 
-    public SQLLimit getLimit() {
-        return limit;
-    }
-
-    public void setLimit(SQLLimit limit) {
-        if (limit != null) {
-            limit.setParent(this);
-        }
-        this.limit = limit;
-    }
 
     public SQLExpr getFirst() {
-        if (limit == null) {
-            return null;
-        }
-
-        return limit.getRowCount();
+        return first;
     }
 
     public void setFirst(SQLExpr first) {
-        if (limit == null) {
-            limit = new SQLLimit();
+        if (first != null) {
+            first.setParent(this);
         }
-        this.limit.setRowCount(first);
+        this.first = first;
     }
 
     public SQLExpr getOffset() {
-        if (limit == null) {
-            return null;
-        }
-
-        return limit.getOffset();
+        return offset;
     }
 
     public void setOffset(SQLExpr offset) {
-        if (limit == null) {
-            limit = new SQLLimit();
+        if (offset != null) {
+            offset.setParent(this);
         }
-        this.limit.setOffset(offset);
+        this.offset = offset;
     }
 
 	@Override

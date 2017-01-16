@@ -45,6 +45,7 @@ import com.alibaba.druid.sql.ast.SQLLimit;
 import com.alibaba.druid.sql.dialect.odps.ast.OdpsSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.oracle.ast.stmt.OracleSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock;
+import com.alibaba.druid.sql.dialect.postgresql.ast.stmt.PGSelectQueryBlock.PGLimit;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerTop;
 import com.alibaba.druid.util.JdbcConstants;
@@ -128,7 +129,7 @@ public class PagerUtils {
             throw new IllegalArgumentException("limit already exists.");
         }
 
-        SQLLimit limit = new SQLLimit();
+        PGLimit limit = new PGLimit();
         if (offset > 0) {
             limit.setOffset(new SQLIntegerExpr(offset));
         }
@@ -486,8 +487,7 @@ public class PagerUtils {
                 }
 
                 if (query instanceof OdpsSelectQueryBlock) {
-                    SQLLimit limit = ((OdpsSelectQueryBlock) query).getLimit();
-                    SQLExpr rowCountExpr = limit != null ? limit.getRowCount() : null;
+                    SQLExpr rowCountExpr = ((OdpsSelectQueryBlock) query).getLimit();
 
                     if (rowCountExpr instanceof SQLNumericLiteralExpr) {
                         int rowCount = ((SQLNumericLiteralExpr) rowCountExpr).getNumber().intValue();

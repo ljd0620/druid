@@ -15,8 +15,6 @@
  */
 package com.alibaba.druid.filter.logging;
 
-import com.alibaba.druid.sql.SQLUtils.FormatOption;
-
 /**
  * @author wenshao [szujobs@hotmail.com]
  */
@@ -135,13 +133,4 @@ public interface LogFilterMBean {
     boolean isResultSetCloseAfterLogEnabled();
 
     void setResultSetCloseAfterLogEnabled(boolean resultSetCloseAfterLogEnable);
-
-    FormatOption getStatementSqlFormatOption();
-
-    void setStatementSqlFormatOption(FormatOption formatOption);
-
-    boolean isStatementSqlPrettyFormat();
-
-    void setStatementSqlPrettyFormat(boolean statementSqlPrettyFormat);
-
 }
