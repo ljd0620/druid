@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2101 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,16 +26,24 @@ import com.alibaba.druid.sql.visitor.SQLASTVisitor;
 public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery {
 
     protected int                       distionOption;
-    protected final List<SQLSelectItem> selectList = new ArrayList<SQLSelectItem>();
+    protected final List<SQLSelectItem> selectList      = new ArrayList<SQLSelectItem>();
 
     protected SQLTableSource            from;
     protected SQLExprTableSource        into;
     protected SQLExpr                   where;
+
+    // for oracle & oceanbase
+    protected SQLExpr                   startWith;
+    protected SQLExpr                   connectBy;
+    protected boolean                   prior           = false;
+    protected boolean                   noCycle         = false;
+    protected SQLOrderBy                orderBySiblings;
+
     protected SQLSelectGroupByClause    groupBy;
     protected SQLOrderBy                orderBy;
-    protected boolean                   parenthesized = false;
-    protected boolean                   forUpdate     = false;
-    protected boolean                   noWait        = false;
+    protected boolean                   parenthesized   = false;
+    protected boolean                   forUpdate       = false;
+    protected boolean                   noWait          = false;
     protected SQLExpr                   waitTime;
     protected SQLExpr                   first;
     protected SQLExpr                   offset;
@@ -64,6 +72,9 @@ public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery
     }
 
     public void setGroupBy(SQLSelectGroupByClause groupBy) {
+        if (groupBy != null) {
+            groupBy.setParent(this);
+        }
         this.groupBy = groupBy;
     }
 
@@ -90,6 +101,17 @@ public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery
         this.orderBy = orderBy;
     }
 
+    public SQLOrderBy getOrderBySiblings() {
+        return orderBySiblings;
+    }
+
+    public void setOrderBySiblings(SQLOrderBy orderBySiblings) {
+        if (orderBySiblings != null) {
+            orderBySiblings.setParent(this);
+        }
+        this.orderBySiblings = orderBySiblings;
+    }
+
     public int getDistionOption() {
         return this.distionOption;
     }
@@ -112,6 +134,9 @@ public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery
     }
 
     public void setFrom(SQLTableSource from) {
+        if (from != null) {
+            from.setParent(this);
+        }
         this.from = from;
     }
 
@@ -173,12 +198,52 @@ public class SQLSelectQueryBlock extends SQLObjectImpl implements SQLSelectQuery
         this.offset = offset;
     }
 
+    public boolean isPrior() {
+        return prior;
+    }
+
+    public void setPrior(boolean prior) {
+        this.prior = prior;
+    }
+
+    public SQLExpr getStartWith() {
+        return this.startWith;
+    }
+
+    public void setStartWith(SQLExpr startWith) {
+        if (startWith != null) {
+            startWith.setParent(this);
+        }
+        this.startWith = startWith;
+    }
+
+    public SQLExpr getConnectBy() {
+        return this.connectBy;
+    }
+
+    public void setConnectBy(SQLExpr connectBy) {
+        if (connectBy != null) {
+            connectBy.setParent(this);
+        }
+        this.connectBy = connectBy;
+    }
+
+    public boolean isNoCycle() {
+        return this.noCycle;
+    }
+
+    public void setNoCycle(boolean noCycle) {
+        this.noCycle = noCycle;
+    }
+
 	@Override
     protected void accept0(SQLASTVisitor visitor) {
         if (visitor.visit(this)) {
             acceptChild(visitor, this.selectList);
             acceptChild(visitor, this.from);
             acceptChild(visitor, this.where);
+            acceptChild(visitor, this.startWith);
+            acceptChild(visitor, this.connectBy);
             acceptChild(visitor, this.groupBy);
         }
         visitor.endVisit(this);

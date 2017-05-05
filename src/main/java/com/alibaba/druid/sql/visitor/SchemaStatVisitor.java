@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2101 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,11 +52,25 @@ import com.alibaba.druid.sql.ast.expr.SQLMethodInvokeExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.ast.expr.SQLSequenceExpr;
 import com.alibaba.druid.sql.ast.statement.*;
+<<<<<<< HEAD
+=======
+import com.alibaba.druid.sql.dialect.mysql.ast.expr.MySqlExpr;
+import com.alibaba.druid.sql.dialect.mysql.ast.statement.MySqlExplainStatement;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlASTVisitorAdapter;
+import com.alibaba.druid.sql.dialect.odps.ast.OdpsValuesTableSource;
+import com.alibaba.druid.sql.dialect.oracle.ast.expr.OracleExpr;
+import com.alibaba.druid.sql.dialect.postgresql.visitor.PGASTVisitorAdapter;
+>>>>>>> alibaba/master
 import com.alibaba.druid.stat.TableStat;
 import com.alibaba.druid.stat.TableStat.Column;
 import com.alibaba.druid.stat.TableStat.Condition;
 import com.alibaba.druid.stat.TableStat.Mode;
 import com.alibaba.druid.stat.TableStat.Relationship;
+<<<<<<< HEAD
+=======
+import com.alibaba.druid.util.JdbcConstants;
+import com.alibaba.druid.util.StringUtils;
+>>>>>>> alibaba/master
 
 public class SchemaStatVisitor extends SQLASTVisitorAdapter {
 
@@ -73,7 +87,7 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
 
     protected final Map<String, SQLObject> variants = new LinkedHashMap<String, SQLObject>();
 
-    protected Map<String, String> aliasMap = new HashMap<String, String>();
+    protected Map<String, String> aliasMap = new LinkedHashMap<String, String>();
 
     protected String currentTable;
 
@@ -416,6 +430,10 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
         }
 
         for (SQLExpr item : valueExprs) {
+            Column valueColumn = getColumn(item);
+            if (valueColumn != null) {
+                continue;
+            }
             Object value = SQLEvalVisitorUtils.eval(getDbType(), item, parameters, false);
             condition.getValues().add(value);
         }
@@ -437,6 +455,10 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
                 SQLExpr firstExpr = methodInvokeExp.getParameters().get(0);
                 return getColumn(firstExpr);
             }
+        }
+
+        if (expr instanceof SQLCastExpr) {
+            expr = ((SQLCastExpr) expr).getExpr();
         }
 
         if (expr instanceof SQLPropertyExpr) {
@@ -748,10 +770,17 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
         List<SQLSelectItem> selectList = null;
         if (query instanceof SQLSelectQueryBlock) {
             queryBlock = (SQLSelectQueryBlock) query;
+
+            if (queryBlock.getGroupBy() != null) {
+                return null;
+            }
+
             selectList = queryBlock.getSelectList();
         }
 
         if (selectList != null) {
+            boolean allColumn = false;
+            String allColumnOwner = null;
             for (SQLSelectItem item : selectList) {
                 if (!item.getClass().equals(SQLSelectItem.class)) {
                     continue;
@@ -783,7 +812,52 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
                         }
                     }
                 }
+
+                if (itemExpr instanceof SQLAllColumnExpr) {
+                    allColumn = true;
+                } else if (itemExpr instanceof SQLPropertyExpr) {
+                    SQLPropertyExpr propertyExpr = (SQLPropertyExpr) itemExpr;
+                    if (propertyExpr.getName().equals("*")) {
+                        SQLExpr owner = propertyExpr.getOwner();
+                        if (owner instanceof SQLIdentifierExpr) {
+                            allColumnOwner = ((SQLIdentifierExpr) owner).getName();
+                            allColumn = true;
+                        }
+                    }
+                }
             }
+
+            if (allColumn) {
+
+                SQLTableSource from = queryBlock.getFrom();
+                String tableName = getTable(from, allColumnOwner);
+                if (tableName != null) {
+                    return new Column(tableName, alias);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private String getTable(SQLTableSource from, String tableAlias) {
+        if (from instanceof SQLExprTableSource) {
+            boolean aliasEq = StringUtils.equals(from.getAlias(), tableAlias);
+            SQLExpr tableSourceExpr = ((SQLExprTableSource) from).getExpr();
+            if (tableSourceExpr instanceof SQLName) {
+                String tableName = ((SQLName) tableSourceExpr).toString();
+                if (tableAlias == null || aliasEq) {
+                    return tableName;
+                }
+            }
+        } else if (from instanceof SQLJoinTableSource) {
+            SQLJoinTableSource joinTableSource = (SQLJoinTableSource) from;
+            String leftMatchTableName = getTable(joinTableSource.getLeft(), tableAlias);
+            if (leftMatchTableName != null) {
+                return leftMatchTableName;
+            }
+
+            return getTable(joinTableSource.getRight(), tableAlias);
         }
 
         return null;
@@ -802,7 +876,19 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
             return false;
         }
 
-        Column column;
+        if ("LEVEL".equalsIgnoreCase(ident) || "CONNECT_BY_ISCYCLE".equalsIgnoreCase(ident)) {
+            for (SQLObject parent = x.getParent(); parent != null; parent = parent.getParent()) {
+                if (parent instanceof SQLSelectQueryBlock) {
+                    SQLSelectQueryBlock queryBlock = (SQLSelectQueryBlock) parent;
+                    if (queryBlock.getStartWith() != null || queryBlock.getConnectBy() != null) {
+                        return false;
+                    }
+                    break;
+                }
+            }
+        }
+
+        Column column = null;
         if (currentTable != null) {
             column = addColumn(currentTable, ident);
             
@@ -811,12 +897,34 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
             }
             x.putAttribute(ATTR_COLUMN, column);
         } else {
-            column = handleUnkownColumn(ident);
+            boolean skip = false;
+            for (SQLObject parent = x.getParent();parent != null;parent = parent.getParent()) {
+                if (parent instanceof SQLSelectQueryBlock) {
+                    SQLTableSource from = ((SQLSelectQueryBlock) parent).getFrom();
+
+                    if (from instanceof OdpsValuesTableSource) {
+                        skip = true;
+                        break;
+                    }
+                } else if (parent instanceof SQLSelectQuery) {
+                    break;
+                }
+            }
+            if (!skip) {
+                column = handleUnkownColumn(ident);
+            }
             if (column != null) {
                 x.putAttribute(ATTR_COLUMN, column);
             }
         }
         if (column != null) {
+            SQLObject parent = x.getParent();
+            if (parent instanceof SQLPrimaryKey) {
+                column.setPrimaryKey(true);
+            } else if (parent instanceof SQLUnique) {
+                column.setUnique(true);
+            }
+
             setColumn(x, column);
         }
         return false;
@@ -1259,6 +1367,14 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
         Column column = addColumn(tableName, columnName);
         if (x.getDataType() != null) {
             column.setDataType(x.getDataType().getName());
+        }
+
+        for (SQLColumnConstraint item : x.getConstraints()) {
+            if (item instanceof SQLPrimaryKey) {
+                column.setPrimaryKey(true);
+            } else if (item instanceof SQLUnique) {
+                column.setUnique(true);
+            }
         }
 
         return false;
@@ -1747,5 +1863,29 @@ public class SchemaStatVisitor extends SQLASTVisitorAdapter {
         tableStat.incrementDropIndexCount();
         return false;
     }
+
+    @Override
+    public boolean visit(SQLDescribeStatement x) {
+        String tableName = x.getObject().toString();
+
+        TableStat tableStat = this.getTableStat(tableName);
+        tableStat.incrementDropIndexCount();
+
+        SQLName column = x.getColumn();
+        if (column != null) {
+            String columnName = column.toString();
+            this.addColumn(tableName, columnName);
+        }
+        return false;
+    }
+
+    public boolean visit(SQLExplainStatement x) {
+        if (x.getStatement() != null) {
+            accept(x.getStatement());
+        }
+
+        return false;
+    }
+    //
     //
 }

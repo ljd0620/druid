@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2101 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ public interface JdbcConstants {
 
     public static final String ORACLE            = "oracle";
     public static final String ORACLE_DRIVER     = "oracle.jdbc.OracleDriver";
+    public static final String ORACLE_DRIVER2    = "oracle.jdbc.driver.OracleDriver";
 
     public static final String ALI_ORACLE        = "AliOracle";
     public static final String ALI_ORACLE_DRIVER = "com.alibaba.jdbc.AlibabaDriver";

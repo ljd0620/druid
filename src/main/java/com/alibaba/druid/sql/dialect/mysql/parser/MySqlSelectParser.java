@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2101 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -157,6 +157,8 @@ public class MySqlSelectParser extends SQLSelectParser {
         parseFrom(queryBlock);
 
         parseWhere(queryBlock);
+
+        parseHierachical(queryBlock);
 
         parseGroupBy(queryBlock);
 
@@ -328,7 +330,7 @@ public class MySqlSelectParser extends SQLSelectParser {
                         lexer.nextToken();
                         accept(Token.BY);
                     }
-                    outFile.setColumnsTerminatedBy((SQLLiteralExpr) expr());
+                    outFile.setColumnsTerminatedBy(expr());
 
                     if (identifierEquals("OPTIONALLY")) {
                         lexer.nextToken();
