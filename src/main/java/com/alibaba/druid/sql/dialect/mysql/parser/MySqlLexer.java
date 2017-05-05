@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2101 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,7 @@ public class MySqlLexer extends Lexer {
         map.put("ROW", Token.ROW);
         map.put("BEGIN", Token.BEGIN);
         map.put("END", Token.END);
+        map.put("DIV", Token.DIV);
         
         // for oceanbase & mysql 5.7
         map.put("PARTITION", Token.PARTITION);

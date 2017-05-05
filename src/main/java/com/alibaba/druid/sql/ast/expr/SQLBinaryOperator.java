@@ -1,5 +1,5 @@
 /*
- * Copyright 1999-2101 Alibaba Group Holding Ltd.
+ * Copyright 1999-2017 Alibaba Group Holding Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ public enum SQLBinaryOperator {
     BitwiseXor("^", 50), 
     
     Multiply("*", 60), 
-    Divide("/", 60), 
+    Divide("/", 60),
+    DIV("DIV", 60), // mysql integer division
     Modulus("%", 60), 
     Mod("MOD", 60),
     
@@ -36,8 +37,11 @@ public enum SQLBinaryOperator {
     SubGt("->", 20), 
     SubGtGt("->>", 20), 
     PoundGt("#>", 20), 
-    PoundGtGt("#>>", 20), 
-    
+    PoundGtGt("#>>", 20),
+    QuesQues("??", 20),
+    QuesBar("?|", 20),
+    QuesAmp("?&", 20),
+
     LeftShift("<<", 80), 
     RightShift(">>", 80), 
 
